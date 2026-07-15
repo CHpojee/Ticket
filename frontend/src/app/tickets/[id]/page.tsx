@@ -17,12 +17,19 @@ const Action = ({
     type="button"
     data-testid={testid}
     onClick={onClick}
-    className={`rounded px-3 py-1.5 text-sm font-medium text-white ${
-      danger ? 'bg-red-600 hover:bg-red-700' : 'bg-brand hover:bg-brand-light'
-    }`}
+    className={danger
+      ? 'inline-flex items-center justify-center rounded-lg border border-rausch px-4 py-2 text-sm font-semibold text-rausch transition-colors hover:bg-rausch/5'
+      : 'btn-primary text-sm'}
   >
     {label}
   </button>
+);
+
+const Field = ({ label, value, testid }: { label: string; value: string; testid?: string }) => (
+  <div>
+    <dt className="text-xs uppercase tracking-wide text-muted">{label}</dt>
+    <dd data-testid={testid} className="mt-0.5 text-ink">{value}</dd>
+  </div>
 );
 
 const TicketDetailContent = ({ id }: { id: string }) => {
@@ -53,7 +60,7 @@ const TicketDetailContent = ({ id }: { id: string }) => {
     }
   };
 
-  if (!ticket) return <p className="text-slate-500">{error || 'Loading…'}</p>;
+  if (!ticket) return <p className="text-muted">{error || 'Loading…'}</p>;
 
   const isOwner = user?.userId === ticket.requestorId;
   const { status } = ticket;
@@ -61,43 +68,35 @@ const TicketDetailContent = ({ id }: { id: string }) => {
   const canDecide = !isOwner && status === 'For Approval';
   const canResolve = !isOwner && status === 'In Process';
   const canClose = isOwner && status === 'Done/Resolved';
+  const hasActions = canSubmit || canDecide || canResolve || canClose;
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <h1 className="text-2xl font-bold">
-          Ticket #
-          {ticket.id}
-        </h1>
+      <div className="flex flex-wrap items-center gap-3">
+        <h1 className="text-3xl font-bold text-ink">{`Ticket #${ticket.id}`}</h1>
         <StatusBadge status={ticket.status} />
       </div>
 
-      <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-        <h2 data-testid="ticket-title" className="text-lg font-semibold">{ticket.title}</h2>
-        <p className="mt-1 text-slate-600">{ticket.description}</p>
-        <dl className="mt-3 grid grid-cols-2 gap-2 text-sm md:grid-cols-4">
-          <div><dt className="text-slate-400">Category</dt><dd>{ticket.categoryDescription}</dd></div>
-          <div><dt className="text-slate-400">Requestor</dt><dd>{ticket.requestorName}</dd></div>
-          <div>
-            <dt className="text-slate-400">Approver</dt>
-            <dd data-testid="detail-approver">{ticket.approverName ?? '—'}</dd>
-          </div>
-          <div>
-            <dt className="text-slate-400">Status</dt>
-            <dd data-testid="detail-status">{ticket.status}</dd>
-          </div>
+      <div className="card p-6">
+        <h2 data-testid="ticket-title" className="text-xl font-semibold text-ink">{ticket.title}</h2>
+        <p className="mt-1 text-neutral-700">{ticket.description}</p>
+        <dl className="mt-5 grid grid-cols-2 gap-4 md:grid-cols-4">
+          <Field label="Category" value={ticket.categoryDescription} />
+          <Field label="Requestor" value={ticket.requestorName} />
+          <Field label="Approver" value={ticket.approverName ?? '—'} testid="detail-approver" />
+          <Field label="Status" value={ticket.status} testid="detail-status" />
         </dl>
       </div>
 
-      <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-        <h2 className="mb-3 font-semibold">Actions</h2>
-        {error && <p data-testid="action-error" className="mb-2 text-sm text-red-600">{error}</p>}
+      <div className="card p-6">
+        <h2 className="mb-4 text-lg font-semibold text-ink">Actions</h2>
+        {error && <p data-testid="action-error" className="mb-3 text-sm text-rausch">{error}</p>}
         <input
           data-testid="action-comment"
           value={comment}
           onChange={(e) => setComment(e.target.value)}
           placeholder="Optional comment"
-          className="mb-3 w-full rounded border border-slate-300 px-3 py-2 text-sm"
+          className="field mb-4"
         />
         <div className="flex flex-wrap gap-2">
           {canSubmit && <Action label="Submit for Approval" testid="act-submit" onClick={() => act('submit')} />}
@@ -106,30 +105,34 @@ const TicketDetailContent = ({ id }: { id: string }) => {
           {canDecide && <Action label="Request Info" testid="act-request-info" onClick={() => act('request-info')} />}
           {canResolve && <Action label="Mark Resolved" testid="act-resolve" onClick={() => act('resolve')} />}
           {canClose && <Action label="Close Ticket" testid="act-close" onClick={() => act('close')} />}
-          {!canSubmit && !canDecide && !canResolve && !canClose && (
-            <span className="text-sm text-slate-400">No actions available for you in this state.</span>
+          {!hasActions && (
+            <span className="text-sm text-muted">No actions available for you in this state.</span>
           )}
         </div>
       </div>
 
-      <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-        <h2 className="mb-3 font-semibold">Audit Trail</h2>
+      <div className="card p-6">
+        <h2 className="mb-4 text-lg font-semibold text-ink">Audit Trail</h2>
         <table className="w-full text-sm">
-          <thead className="text-left text-slate-400">
+          <thead className="text-left text-muted">
             <tr>
-              <th className="py-1">When</th>
-              <th className="py-1">Actor</th>
-              <th className="py-1">Action</th>
-              <th className="py-1">Change</th>
+              <th className="pb-2 font-medium">When</th>
+              <th className="pb-2 font-medium">Actor</th>
+              <th className="pb-2 font-medium">Action</th>
+              <th className="pb-2 font-medium">Change</th>
             </tr>
           </thead>
           <tbody data-testid="audit-table">
             {audit.map((a) => (
-              <tr key={a.id} className="border-t border-slate-100">
-                <td className="py-1">{new Date(a.timestamp).toLocaleString()}</td>
-                <td className="py-1">{a.actorName}</td>
-                <td className="py-1">{a.action}</td>
-                <td className="py-1 text-slate-500">
+              <tr key={a.id} className="border-t border-hairline">
+                <td className="py-2 text-neutral-600">{new Date(a.timestamp).toLocaleString()}</td>
+                <td className="py-2">{a.actorName}</td>
+                <td className="py-2">
+                  <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-medium text-ink">
+                    {a.action}
+                  </span>
+                </td>
+                <td className="py-2 text-muted">
                   {a.field}
                   {a.oldValue || a.newValue ? `: ${a.oldValue ?? '∅'} → ${a.newValue ?? '∅'}` : ''}
                 </td>

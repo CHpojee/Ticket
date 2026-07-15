@@ -32,49 +32,64 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="mx-auto mt-16 max-w-sm rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-      <h1 className="mb-1 text-2xl font-bold text-brand">Internal IT Support</h1>
-      <p className="mb-6 text-sm text-slate-500">Sign in with your user ID</p>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label htmlFor="userId" className="block text-sm font-medium">
-            User ID
-            <input
-              id="userId"
-              data-testid="login-userId"
-              value={userId}
-              onChange={(e) => setUserId(e.target.value)}
-              className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
-              autoComplete="username"
-            />
-          </label>
+    <div className="flex min-h-[calc(100vh-140px)] items-center justify-center">
+      <div className="w-full max-w-sm">
+        <div className="mb-6 flex flex-col items-center text-center">
+          <span className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-rausch text-white">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
+              <circle cx="12" cy="12" r="3.5" stroke="currentColor" strokeWidth="2" />
+            </svg>
+          </span>
+          <h1 className="text-2xl font-bold text-ink">Welcome to IT Support</h1>
+          <p className="mt-1 text-sm text-muted">Sign in with your user ID to continue</p>
         </div>
-        <div>
-          <label htmlFor="password" className="block text-sm font-medium">
-            Password
-            <input
-              id="password"
-              data-testid="login-password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
-              autoComplete="current-password"
-            />
-          </label>
+
+        <div className="card p-6">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label htmlFor="userId" className="mb-1 block text-sm font-medium text-ink">
+                User ID
+              </label>
+              <input
+                id="userId"
+                data-testid="login-userId"
+                value={userId}
+                onChange={(e) => setUserId(e.target.value)}
+                className="field"
+                autoComplete="username"
+                placeholder="e.g. 1001"
+              />
+            </div>
+            <div>
+              <label htmlFor="password" className="mb-1 block text-sm font-medium text-ink">
+                Password
+              </label>
+              <input
+                id="password"
+                data-testid="login-password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="field"
+                autoComplete="current-password"
+                placeholder="••••••"
+              />
+            </div>
+            {error && (
+              <p data-testid="login-error" className="text-sm text-rausch">{error}</p>
+            )}
+            <button
+              type="submit"
+              data-testid="login-submit"
+              disabled={submitting}
+              className="btn-primary w-full"
+            >
+              {submitting ? 'Signing in…' : 'Sign in'}
+            </button>
+          </form>
         </div>
-        {error && (
-          <p data-testid="login-error" className="text-sm text-red-600">{error}</p>
-        )}
-        <button
-          type="submit"
-          data-testid="login-submit"
-          disabled={submitting}
-          className="w-full rounded bg-brand py-2 font-medium text-white hover:bg-brand-light disabled:opacity-50"
-        >
-          {submitting ? 'Signing in…' : 'Sign in'}
-        </button>
-      </form>
+      </div>
     </div>
   );
 };

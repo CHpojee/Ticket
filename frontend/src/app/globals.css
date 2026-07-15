@@ -3,26 +3,64 @@
 @tailwind utilities;
 
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
+  --background: #ffffff;
+  --foreground: #222222;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
+  font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    Helvetica, Arial, sans-serif;
 }
 
-/* Minimal markdown styling for the Specs Viewer */
-.markdown h1 { @apply text-2xl font-bold mt-4 mb-3; }
-.markdown h2 { @apply text-xl font-semibold mt-4 mb-2; }
-.markdown h3 { @apply text-lg font-semibold mt-3 mb-2; }
-.markdown p { @apply my-2 leading-relaxed; }
-.markdown ul { @apply list-disc ml-6 my-2; }
-.markdown ol { @apply list-decimal ml-6 my-2; }
-.markdown code { @apply bg-slate-100 px-1 py-0.5 rounded text-sm; }
-.markdown pre { @apply bg-slate-900 text-slate-100 p-3 rounded my-3 overflow-x-auto text-sm; }
+@layer components {
+  /* Airbnb-style primary button */
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-lg bg-rausch px-5 py-2.5
+      font-semibold text-white transition-colors hover:bg-rausch-dark
+      focus:outline-none focus-visible:ring-2 focus-visible:ring-rausch/40
+      disabled:opacity-50;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center rounded-lg border border-ink
+      bg-white px-4 py-2 font-semibold text-ink transition-colors hover:bg-neutral-50;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center rounded-full px-3 py-1.5 text-sm
+      font-medium text-ink transition-colors hover:bg-neutral-100;
+  }
+
+  .field {
+    @apply w-full rounded-lg border border-hairline bg-white px-3.5 py-2.5 text-ink
+      placeholder:text-neutral-400 transition
+      focus:border-ink focus:outline-none focus:ring-1 focus:ring-ink;
+  }
+
+  .card {
+    @apply rounded-2xl border border-hairline bg-white shadow-card;
+  }
+}
+
+/* Markdown styling for the Specs Viewer */
+.markdown h1 { @apply text-2xl font-semibold mt-4 mb-3 text-ink; }
+.markdown h2 { @apply text-xl font-semibold mt-5 mb-2 text-ink; }
+.markdown h3 { @apply text-lg font-semibold mt-4 mb-2 text-ink; }
+.markdown p { @apply my-2 leading-relaxed text-neutral-700; }
+.markdown ul { @apply list-disc ml-6 my-2 text-neutral-700; }
+.markdown ol { @apply list-decimal ml-6 my-2 text-neutral-700; }
+.markdown code { @apply bg-neutral-100 px-1 py-0.5 rounded text-sm; }
+.markdown pre { @apply bg-neutral-900 text-neutral-100 p-3 rounded-xl my-3 overflow-x-auto text-sm; }
 .markdown pre code { @apply bg-transparent p-0 text-inherit; }
 .markdown table { @apply border-collapse my-3 w-full text-sm; }
-.markdown th, .markdown td { @apply border border-slate-300 px-2 py-1 text-left; }
-.markdown a { @apply text-brand underline; }
-.markdown blockquote { @apply border-l-4 border-slate-300 pl-3 italic text-slate-600 my-2; }
+.markdown th, .markdown td { @apply border border-hairline px-2 py-1 text-left; }
+.markdown th { @apply bg-neutral-50; }
+.markdown a { @apply text-rausch underline; }
+.markdown blockquote { @apply border-l-4 border-hairline pl-3 italic text-muted my-2; }

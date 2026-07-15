@@ -51,55 +51,63 @@ const ReportsContent = () => {
     }
   };
 
+  const chip = (checked: boolean) => `cursor-pointer rounded-full border px-3 py-1.5 text-sm transition-colors ${
+    checked ? 'border-ink bg-ink text-white' : 'border-hairline text-ink hover:border-ink'
+  }`;
+
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Generate Report</h1>
-      <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm space-y-4">
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-3xl font-bold text-ink">Generate Report</h1>
+        <p className="mt-1 text-muted">Export tickets to CSV or Excel, filtered to your needs</p>
+      </div>
+
+      <div className="card space-y-6 p-6">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <label className="text-sm font-medium">
-            From
-            <input data-testid="report-from" type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="mt-1 block w-full rounded border border-slate-300 px-3 py-2" />
-          </label>
-          <label className="text-sm font-medium">
-            To
-            <input data-testid="report-to" type="date" value={to} onChange={(e) => setTo(e.target.value)} className="mt-1 block w-full rounded border border-slate-300 px-3 py-2" />
-          </label>
+          <div>
+            <span className="mb-1 block text-sm font-medium text-ink">From</span>
+            <input data-testid="report-from" type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="field" />
+          </div>
+          <div>
+            <span className="mb-1 block text-sm font-medium text-ink">To</span>
+            <input data-testid="report-to" type="date" value={to} onChange={(e) => setTo(e.target.value)} className="field" />
+          </div>
         </div>
 
-        <fieldset>
-          <legend className="text-sm font-medium">Categories</legend>
-          <div className="mt-1 flex flex-wrap gap-3">
+        <div>
+          <span className="mb-2 block text-sm font-medium text-ink">Categories</span>
+          <div className="flex flex-wrap gap-2">
             {CATEGORIES.map((c) => (
-              <label key={c.code} className="flex items-center gap-1 text-sm">
-                <input type="checkbox" checked={categories.includes(c.code)} onChange={() => toggle(categories, c.code, setCategories)} />
+              <label key={c.code} className={chip(categories.includes(c.code))}>
+                <input type="checkbox" className="sr-only" checked={categories.includes(c.code)} onChange={() => toggle(categories, c.code, setCategories)} />
                 {c.code}
               </label>
             ))}
           </div>
-        </fieldset>
+        </div>
 
-        <fieldset>
-          <legend className="text-sm font-medium">Statuses</legend>
-          <div className="mt-1 flex flex-wrap gap-3">
+        <div>
+          <span className="mb-2 block text-sm font-medium text-ink">Statuses</span>
+          <div className="flex flex-wrap gap-2">
             {STATUSES.map((s) => (
-              <label key={s} className="flex items-center gap-1 text-sm">
-                <input type="checkbox" checked={statuses.includes(s)} onChange={() => toggle(statuses, s, setStatuses)} />
+              <label key={s} className={chip(statuses.includes(s))}>
+                <input type="checkbox" className="sr-only" checked={statuses.includes(s)} onChange={() => toggle(statuses, s, setStatuses)} />
                 {s}
               </label>
             ))}
           </div>
-        </fieldset>
+        </div>
 
-        <div className="flex items-center gap-3">
-          <select data-testid="report-format" value={format} onChange={(e) => setFormat(e.target.value)} className="rounded border border-slate-300 px-3 py-2 text-sm">
+        <div className="flex flex-wrap items-center gap-3 border-t border-hairline pt-5">
+          <select data-testid="report-format" value={format} onChange={(e) => setFormat(e.target.value)} className="field w-auto">
             <option value="csv">CSV</option>
             <option value="xlsx">Excel (.xlsx)</option>
           </select>
-          <button type="button" data-testid="report-download" disabled={busy} onClick={download} className="rounded bg-brand px-4 py-2 font-medium text-white hover:bg-brand-light disabled:opacity-50">
+          <button type="button" data-testid="report-download" disabled={busy} onClick={download} className="btn-primary">
             {busy ? 'Generating…' : 'Download'}
           </button>
+          {error && <span data-testid="report-error" className="text-sm text-rausch">{error}</span>}
         </div>
-        {error && <p data-testid="report-error" className="text-sm text-red-600">{error}</p>}
       </div>
     </div>
   );

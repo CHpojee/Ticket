@@ -9,12 +9,12 @@ import Protected from '@/components/Protected';
 import { apiFetch } from '@/lib/api';
 import type { DashboardSummary } from '@/lib/types';
 
-const PIE_COLORS = ['#94a3b8', '#f59e0b', '#ef4444', '#fb923c', '#3b82f6', '#10b981', '#15803d'];
+const PIE_COLORS = ['#B0B0B0', '#FFB400', '#FF385C', '#FC642D', '#008489', '#00A699', '#484848'];
 
 const Card = ({ label, value, testid }: { label: string; value: number; testid: string }) => (
-  <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-    <p className="text-sm text-slate-500">{label}</p>
-    <p data-testid={testid} className="mt-1 text-3xl font-bold text-brand">{value}</p>
+  <div className="card p-5 transition-shadow hover:shadow-elevate">
+    <p className="text-sm text-muted">{label}</p>
+    <p data-testid={testid} className="mt-2 text-3xl font-bold text-ink">{value}</p>
   </div>
 );
 
@@ -28,12 +28,16 @@ const DashboardContent = () => {
       .catch((e) => setError(e.message));
   }, []);
 
-  if (error) return <p className="text-red-600">{error}</p>;
-  if (!data) return <p className="text-slate-500">Loading…</p>;
+  if (error) return <p className="text-rausch">{error}</p>;
+  if (!data) return <p className="text-muted">Loading…</p>;
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Dashboard</h1>
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-3xl font-bold text-ink">Dashboard</h1>
+        <p className="mt-1 text-muted">Overview of tickets across the approval cycle</p>
+      </div>
+
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <Card label="Total Tickets" value={data.totalTickets} testid="card-total" />
         <Card label="Total Open" value={data.totalOpen} testid="card-open" />
@@ -42,28 +46,30 @@ const DashboardContent = () => {
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-          <h2 className="mb-3 font-semibold">Tickets by Category</h2>
+        <div className="card p-5">
+          <h2 className="mb-4 text-lg font-semibold text-ink">Tickets by Category</h2>
           <ResponsiveContainer width="100%" height={280}>
-            <BarChart data={data.byCategory}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="code" />
-              <YAxis allowDecimals={false} />
-              <Tooltip />
-              <Bar dataKey="count" fill="#3b5bdb" />
+            <BarChart data={data.byCategory} barCategoryGap="30%">
+              <CartesianGrid strokeDasharray="3 3" stroke="#EBEBEB" vertical={false} />
+              <XAxis dataKey="code" tickLine={false} axisLine={{ stroke: '#DDDDDD' }} />
+              <YAxis allowDecimals={false} tickLine={false} axisLine={false} />
+              <Tooltip cursor={{ fill: 'rgba(255,56,92,0.06)' }} />
+              <Bar dataKey="count" fill="#FF385C" radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
 
-        <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-          <h2 className="mb-3 font-semibold">Tickets by Status</h2>
+        <div className="card p-5">
+          <h2 className="mb-4 text-lg font-semibold text-ink">Tickets by Status</h2>
           <ResponsiveContainer width="100%" height={280}>
             <PieChart>
               <Pie
                 data={data.byStatus.filter((s) => s.count > 0)}
                 dataKey="count"
                 nameKey="status"
-                outerRadius={90}
+                innerRadius={55}
+                outerRadius={95}
+                paddingAngle={2}
                 label
               >
                 {data.byStatus.filter((s) => s.count > 0).map((entry, i) => (
