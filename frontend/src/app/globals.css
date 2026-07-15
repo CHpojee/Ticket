@@ -1,0 +1,28 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #f8fafc;
+  --foreground: #0f172a;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+/* Minimal markdown styling for the Specs Viewer */
+.markdown h1 { @apply text-2xl font-bold mt-4 mb-3; }
+.markdown h2 { @apply text-xl font-semibold mt-4 mb-2; }
+.markdown h3 { @apply text-lg font-semibold mt-3 mb-2; }
+.markdown p { @apply my-2 leading-relaxed; }
+.markdown ul { @apply list-disc ml-6 my-2; }
+.markdown ol { @apply list-decimal ml-6 my-2; }
+.markdown code { @apply bg-slate-100 px-1 py-0.5 rounded text-sm; }
+.markdown pre { @apply bg-slate-900 text-slate-100 p-3 rounded my-3 overflow-x-auto text-sm; }
+.markdown pre code { @apply bg-transparent p-0 text-inherit; }
+.markdown table { @apply border-collapse my-3 w-full text-sm; }
+.markdown th, .markdown td { @apply border border-slate-300 px-2 py-1 text-left; }
+.markdown a { @apply text-brand underline; }
+.markdown blockquote { @apply border-l-4 border-slate-300 pl-3 italic text-slate-600 my-2; }
