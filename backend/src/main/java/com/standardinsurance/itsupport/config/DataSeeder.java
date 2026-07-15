@@ -63,13 +63,13 @@ public class DataSeeder implements CommandLineRunner {
         if (userRepository.count() > 0) {
             return;
         }
-        // Plaintext seed credentials; stored BCrypt-hashed.
+        // Plaintext seed credentials; stored BCrypt-hashed. approver 'Y' = system approver.
         userRepository.saveAll(List.of(
-                user("1001", "Admin", "Admin"),
-                user("1002", "Leiva", "Leiva"),
-                user("1003", "Rudy", "Rudy"),
-                user("1004", "Rich", "Rich"),
-                user("1005", "Paw", "Paw")));
+                user("1001", "Admin", "Admin", null, null),
+                user("1002", "Leiva", "Leiva", "Y", "rreyes@stand-insurance.com"),
+                user("1003", "Rudy", "Rudy", null, "richeercoronareyes@gmail.com"),
+                user("1004", "Rich", "Rich", null, null),
+                user("1005", "Paw", "Paw", null, "clualhati@standard-insurance.com")));
         log.info("Seeded {} users", userRepository.count());
     }
 
@@ -83,7 +83,8 @@ public class DataSeeder implements CommandLineRunner {
         log.info("Seeded restriction: user 1003 -> category DB");
     }
 
-    private User user(String userId, String password, String name) {
-        return new User(userId, passwordEncoder.encode(password), name);
+    private User user(String userId, String password, String name, String approver,
+                      String emailAddress) {
+        return new User(userId, passwordEncoder.encode(password), name, approver, emailAddress);
     }
 }

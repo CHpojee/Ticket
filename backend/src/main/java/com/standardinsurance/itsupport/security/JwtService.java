@@ -24,12 +24,13 @@ public class JwtService {
         this.ttlSeconds = ttlSeconds;
     }
 
-    public String generate(String userId, String name, String role) {
+    public String generate(String userId, String name, String role, boolean approver) {
         Instant now = Instant.now();
         return Jwts.builder()
                 .subject(userId)
                 .claim("name", name)
                 .claim("role", role)
+                .claim("approver", approver)
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(now.plusSeconds(ttlSeconds)))
                 .signWith(key)
@@ -46,6 +47,7 @@ public class JwtService {
         return new AuthenticatedUser(
                 claims.getSubject(),
                 claims.get("name", String.class),
-                claims.get("role", String.class));
+                claims.get("role", String.class),
+                Boolean.TRUE.equals(claims.get("approver", Boolean.class)));
     }
 }

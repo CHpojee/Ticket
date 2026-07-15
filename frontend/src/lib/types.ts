@@ -2,6 +2,7 @@ export interface AuthUser {
   userId: string;
   name: string;
   role: 'ROLE_ADMIN' | 'ROLE_USER';
+  approver: boolean;
 }
 
 export interface LoginResponse {
@@ -60,6 +61,8 @@ export interface UserDetail {
   userId: string;
   name: string;
   role: string;
+  approver: boolean;
+  emailAddress: string | null;
   restrictions: string[];
 }
 

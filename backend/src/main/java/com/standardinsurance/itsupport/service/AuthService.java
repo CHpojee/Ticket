@@ -35,7 +35,9 @@ public class AuthService {
             throw new InvalidCredentialsException();
         }
         String role = Roles.forUserId(user.getUserId());
-        String token = jwtService.generate(user.getUserId(), user.getName(), role);
-        return new LoginResponse(token, new UserDto(user.getUserId(), user.getName(), role));
+        boolean approver = user.isApprover();
+        String token = jwtService.generate(user.getUserId(), user.getName(), role, approver);
+        return new LoginResponse(token,
+                new UserDto(user.getUserId(), user.getName(), role, approver));
     }
 }

@@ -159,6 +159,10 @@ public class TicketService {
             throw new ForbiddenActionException(
                     "A requestor cannot " + event.name().toLowerCase() + " their own ticket");
         }
+        if (!actor.isApprover()) {
+            throw new ForbiddenActionException(
+                    "User " + actorId + " is not a system approver");
+        }
         restrictionService.assertAllowed(actorId, ticket.getCategory().getCode());
         TicketStatus next = stateMachine.next(ticket.getStatus(), event);
         if (assignApprover) {

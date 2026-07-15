@@ -63,10 +63,11 @@ const TicketDetailContent = ({ id }: { id: string }) => {
   if (!ticket) return <p className="text-muted">{error || 'Loading…'}</p>;
 
   const isOwner = user?.userId === ticket.requestorId;
+  const isApprover = user?.approver ?? false;
   const { status } = ticket;
   const canSubmit = isOwner && ['New', 'Rejected', 'For Additional Info'].includes(status);
-  const canDecide = !isOwner && status === 'For Approval';
-  const canResolve = !isOwner && status === 'In Process';
+  const canDecide = !isOwner && isApprover && status === 'For Approval';
+  const canResolve = !isOwner && isApprover && status === 'In Process';
   const canClose = isOwner && status === 'Done/Resolved';
   const hasActions = canSubmit || canDecide || canResolve || canClose;
 

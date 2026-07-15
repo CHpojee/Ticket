@@ -124,6 +124,8 @@ Service → AuditService (records every mutation) → EmailNotificationService
 - `POST /api/auth/login` validates seeded credentials, returns a JWT.
 - Roles: `ADMIN` (userId 1001) manages users; all users can create/act on tickets subject
   to restrictions. Role is derived from user data (Admin flag) — see spec 01.
+- **Approver rule:** only users with `approver = 'Y'` may approve / reject / request-info /
+  resolve a ticket. The flag is carried in the JWT so the UI can gate approver actions.
 - Authorization is enforced in services, not just filters, so tests exercise the rules.
 
 ### Restriction enforcement (critical constraint)
@@ -142,7 +144,8 @@ Transitions are validated centrally in `TicketStateMachine`. Illegal transitions
 
 Foreign keys are enforced. Tables:
 
-- `users(user_id PK, password, name)`
+- `users(user_id PK, password, name, approver CHAR(1) 'Y'|NULL, email_address NULL)`
+  — a user is a **system approver iff `approver = 'Y'`**.
 - `user_restrictions(id PK, user_id FK→users, ticket_category_code FK→ticket_categories,
   UNIQUE(user_id, ticket_category_code))`
 - `ticket_categories(code PK, description)`
@@ -153,16 +156,17 @@ Foreign keys are enforced. Tables:
 
 ### Seed data
 **users**
-| userId | password | name  |
-|--------|----------|-------|
-| 1001   | Admin    | Admin |
-| 1002   | Leiva    | Leiva |
-| 1003   | Rudy     | Rudy  |
-| 1004   | Rich     | Rich  |
-| 1005   | Paw      | Paw   |
+| userId | password | name  | approver | emailAddress                      |
+|--------|----------|-------|----------|-----------------------------------|
+| 1001   | Admin    | Admin | NULL     | NULL                              |
+| 1002   | Leiva    | Leiva | Y        | rreyes@stand-insurance.com        |
+| 1003   | Rudy     | Rudy  | NULL     | richeercoronareyes@gmail.com      |
+| 1004   | Rich     | Rich  | NULL     | NULL                              |
+| 1005   | Paw      | Paw   | NULL     | clualhati@standard-insurance.com  |
 
 > Seed passwords are stored **BCrypt-hashed** by the seeder; the plaintext above is the
-> login credential.
+> login credential. `approver = 'Y'` marks a system approver (only **1002 Leiva**).
+> Email notifications go to a user's `emailAddress`; users without one are skipped.
 
 **ticket_categories**
 | Code | Description                              |

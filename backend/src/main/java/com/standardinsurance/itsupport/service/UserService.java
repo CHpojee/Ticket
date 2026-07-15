@@ -56,7 +56,8 @@ public class UserService {
         if (userRepository.existsByUserId(req.userId())) {
             throw new ConflictException("User " + req.userId() + " already exists");
         }
-        User user = new User(req.userId(), passwordEncoder.encode(req.password()), req.name());
+        User user = new User(req.userId(), passwordEncoder.encode(req.password()), req.name(),
+                req.approver() ? User.APPROVER_FLAG : null, blankToNull(req.emailAddress()));
         userRepository.save(user);
         auditService.record(actorId, null, ACTION_CREATED, "userId", null, req.userId());
         return toDetail(user);
@@ -74,8 +75,28 @@ public class UserService {
             user.setPassword(passwordEncoder.encode(req.password()));
             auditService.record(actorId, null, ACTION_UPDATED, "password", "***", "***");
         }
+        if (req.approver() != null) {
+            String old = user.getApprover();
+            String next = req.approver() ? User.APPROVER_FLAG : null;
+            if (!java.util.Objects.equals(old, next)) {
+                user.setApprover(next);
+                auditService.record(actorId, null, ACTION_UPDATED, "approver", old, next);
+            }
+        }
+        if (req.emailAddress() != null) {
+            String next = blankToNull(req.emailAddress());
+            if (!java.util.Objects.equals(user.getEmailAddress(), next)) {
+                String old = user.getEmailAddress();
+                user.setEmailAddress(next);
+                auditService.record(actorId, null, ACTION_UPDATED, "emailAddress", old, next);
+            }
+        }
         userRepository.save(user);
         return toDetail(user);
+    }
+
+    private static String blankToNull(String s) {
+        return (s == null || s.isBlank()) ? null : s;
     }
 
     @Transactional
@@ -98,6 +119,7 @@ public class UserService {
         List<String> restrictions = restrictionRepository.findByUser_UserId(user.getUserId())
                 .stream().map(r -> r.getCategory().getCode()).toList();
         return new UserDetail(user.getUserId(), user.getName(),
-                Roles.forUserId(user.getUserId()), restrictions);
+                Roles.forUserId(user.getUserId()), user.isApprover(),
+                user.getEmailAddress(), restrictions);
     }
 }

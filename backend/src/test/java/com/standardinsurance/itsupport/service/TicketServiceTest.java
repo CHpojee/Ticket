@@ -44,9 +44,10 @@ class TicketServiceTest {
 
     private final TicketCategory sr = new TicketCategory("SR", "Service Request");
     private final TicketCategory db = new TicketCategory("DB", "Database Fix (DB Fix)");
-    private final User leiva = new User("1002", "x", "Leiva");
+    private final User leiva = new User("1002", "x", "Leiva", "Y", "leiva@x.com"); // approver
     private final User rudy = new User("1003", "x", "Rudy");
-    private final User rich = new User("1004", "x", "Rich");
+    private final User rich = new User("1004", "x", "Rich"); // not an approver
+    private final User paw = new User("1005", "x", "Paw"); // not an approver
 
     @BeforeEach
     void setUp() {
@@ -119,19 +120,31 @@ class TicketServiceTest {
     }
 
     @Test
-    void approveAssignsApproverAndMovesToInProcess() {
-        Ticket ticket = new Ticket("t", "d", sr, leiva);
+    void approveByApproverAssignsApproverAndMovesToInProcess() {
+        Ticket ticket = new Ticket("t", "d", sr, rich); // requestor is non-approver Rich
         ticket.setStatus(TicketStatus.FOR_APPROVAL);
         when(ticketRepository.findById(5L)).thenReturn(Optional.of(ticket));
-        when(userRepository.findById("1004")).thenReturn(Optional.of(rich));
+        when(userRepository.findById("1002")).thenReturn(Optional.of(leiva)); // approver acts
         when(ticketRepository.save(any(Ticket.class))).thenAnswer(i -> i.getArgument(0));
 
-        Ticket result = service.approve("1004", 5L, "looks good");
+        Ticket result = service.approve("1002", 5L, "looks good");
 
         assertThat(result.getStatus()).isEqualTo(TicketStatus.IN_PROCESS);
-        assertThat(result.getApprover()).isEqualTo(rich);
+        assertThat(result.getApprover()).isEqualTo(leiva);
         // status row + comment row
-        verify(auditService).record(eq("1004"), any(), eq("TICKET_APPROVED"), eq("comment"),
+        verify(auditService).record(eq("1002"), any(), eq("TICKET_APPROVED"), eq("comment"),
                 isNull(), eq("looks good"));
+    }
+
+    @Test
+    void nonApproverCannotApprove() {
+        Ticket ticket = new Ticket("t", "d", sr, rich);
+        ticket.setStatus(TicketStatus.FOR_APPROVAL);
+        when(ticketRepository.findById(5L)).thenReturn(Optional.of(ticket));
+        when(userRepository.findById("1005")).thenReturn(Optional.of(paw)); // Paw is not an approver
+
+        assertThatThrownBy(() -> service.approve("1005", 5L, null))
+                .isInstanceOf(ForbiddenActionException.class)
+                .hasMessageContaining("not a system approver");
     }
 }

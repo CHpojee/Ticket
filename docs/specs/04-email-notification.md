@@ -8,19 +8,20 @@ One notification per lifecycle transition:
 `SUBMITTED, APPROVED, REJECTED, INFO_REQUESTED, RESUBMITTED, RESOLVED, CLOSED`.
 
 ## Recipients
-| Transition        | To                    | Rationale |
-|-------------------|-----------------------|-----------|
-| Submitted         | Approver(s)           | action needed |
-| Approved          | Requestor             | inform + work begins |
-| Rejected          | Requestor             | may resubmit |
-| Info Requested    | Requestor             | must supply info |
-| Resubmitted       | Approver(s)           | re-review needed |
-| Resolved          | Requestor             | please confirm/close |
-| Closed            | Requestor + Approver  | cycle complete |
+| Transition        | To                          | Rationale |
+|-------------------|-----------------------------|-----------|
+| Submitted         | All system approvers (`approver='Y'`) | action needed |
+| Approved          | Requestor                   | inform + work begins |
+| Rejected          | Requestor                   | may resubmit |
+| Info Requested    | Requestor                   | must supply info |
+| Resubmitted       | All system approvers        | re-review needed |
+| Resolved          | Requestor                   | please confirm/close |
+| Closed            | Requestor + Approver        | cycle complete |
 
-Recipient address is derived from the user (`{userId}@standard-insurance.com` in dev, or a
-stored email field if added). Failures to send are logged and **must not** roll back or
-block the ticket transition.
+Recipient addresses come from the user's **`email_address`** column. A user without an
+address is **skipped**; if a transition has no addressable recipient, no mail is sent (a
+line is logged). Failures to send are logged and **must not** roll back or block the ticket
+transition.
 
 ## Design
 ```java

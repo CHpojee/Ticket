@@ -9,6 +9,9 @@ import jakarta.persistence.Table;
 @Table(name = "users")
 public class User {
 
+    /** Marker stored in {@link #approver} for a system approver. */
+    public static final String APPROVER_FLAG = "Y";
+
     @Id
     @Column(name = "user_id", nullable = false, updatable = false)
     private String userId;
@@ -19,14 +22,33 @@ public class User {
     @Column(nullable = false)
     private String name;
 
+    /** 'Y' when the user is a system approver; otherwise NULL. */
+    @Column(length = 1)
+    private String approver;
+
+    @Column(name = "email_address")
+    private String emailAddress;
+
     protected User() {
         // JPA
     }
 
     public User(String userId, String password, String name) {
+        this(userId, password, name, null, null);
+    }
+
+    public User(String userId, String password, String name, String approver,
+                String emailAddress) {
         this.userId = userId;
         this.password = password;
         this.name = name;
+        this.approver = approver;
+        this.emailAddress = emailAddress;
+    }
+
+    /** A user is a system approver if and only if {@code approver == 'Y'}. */
+    public boolean isApprover() {
+        return APPROVER_FLAG.equals(approver);
     }
 
     public String getUserId() {
@@ -47,5 +69,21 @@ public class User {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getApprover() {
+        return approver;
+    }
+
+    public void setApprover(String approver) {
+        this.approver = approver;
+    }
+
+    public String getEmailAddress() {
+        return emailAddress;
+    }
+
+    public void setEmailAddress(String emailAddress) {
+        this.emailAddress = emailAddress;
     }
 }

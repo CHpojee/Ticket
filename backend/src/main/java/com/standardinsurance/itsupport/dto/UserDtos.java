@@ -12,10 +12,13 @@ public final class UserDtos {
     public record CreateUserRequest(
             @NotBlank(message = "is required") String userId,
             @NotBlank(message = "is required") String name,
-            @NotBlank(message = "is required") String password) {
+            @NotBlank(message = "is required") String password,
+            boolean approver,
+            String emailAddress) {
     }
 
-    public record UpdateUserRequest(String name, String password) {
+    public record UpdateUserRequest(String name, String password, Boolean approver,
+                                    String emailAddress) {
     }
 
     public record RestrictionRequest(
@@ -23,6 +26,7 @@ public final class UserDtos {
     }
 
     /** Full user view for admin screens; never includes the password. */
-    public record UserDetail(String userId, String name, String role, List<String> restrictions) {
+    public record UserDetail(String userId, String name, String role, boolean approver,
+                             String emailAddress, List<String> restrictions) {
     }
 }

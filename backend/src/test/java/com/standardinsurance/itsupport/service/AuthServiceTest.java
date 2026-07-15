@@ -48,6 +48,16 @@ class AuthServiceTest {
                 .thenReturn(Optional.of(new User("1003", encoder.encode("Rudy"), "Rudy")));
         LoginResponse res = service.login(new LoginRequest("1003", "Rudy"));
         assertThat(res.user().role()).isEqualTo("ROLE_USER");
+        assertThat(res.user().approver()).isFalse();
+    }
+
+    @Test
+    void approverFlagIsReflected() {
+        when(userRepository.findById("1002"))
+                .thenReturn(Optional.of(new User("1002", encoder.encode("Leiva"), "Leiva",
+                        "Y", "rreyes@stand-insurance.com")));
+        LoginResponse res = service.login(new LoginRequest("1002", "Leiva"));
+        assertThat(res.user().approver()).isTrue();
     }
 
     @Test

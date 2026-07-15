@@ -19,12 +19,12 @@ illegal transitions throw `InvalidTransitionException` → HTTP `409`.
 |-----------------------|--------------------------------|-----------------------|--------------------------|
 | — (create)            | `POST /api/tickets`            | `New`                 | Requestor                |
 | `New`                 | `POST …/submit`               | `For Approval`        | Requestor (owner)        |
-| `For Approval`        | `POST …/approve`              | `In Process`          | Approver (non-restricted, not requestor) |
-| `For Approval`        | `POST …/reject`               | `Rejected`            | Approver                 |
-| `For Approval`        | `POST …/request-info`         | `For Additional Info` | Approver                 |
+| `For Approval`        | `POST …/approve`              | `In Process`          | System approver (`Y`, not requestor) |
+| `For Approval`        | `POST …/reject`               | `Rejected`            | System approver          |
+| `For Approval`        | `POST …/request-info`         | `For Additional Info` | System approver          |
 | `Rejected`            | `POST …/submit` (resubmit)    | `For Approval`        | Requestor (owner)        |
 | `For Additional Info` | `POST …/submit` (resubmit)    | `For Approval`        | Requestor (owner)        |
-| `In Process`          | `POST …/resolve`              | `Done/Resolved`       | Approver / assignee      |
+| `In Process`          | `POST …/resolve`              | `Done/Resolved`       | System approver          |
 | `Done/Resolved`       | `POST …/close`                | `Closed`              | **Original requestor only** |
 
 Any event not listed for the current status → `409 InvalidTransitionException`.
@@ -36,7 +36,9 @@ Any event not listed for the current status → `409 InvalidTransitionException`
 
 ## Guards applied on each transition
 1. **Ownership** — submit/resubmit/close require `actor == requestor`. Else `403`.
-2. **Approver identity** — approve/reject/request-info require actor ≠ requestor. Else `403`.
+2. **Approver identity** — approve/reject/request-info/resolve require actor ≠ requestor **and**
+   the actor to be a **system approver** (`approver = 'Y'`, see [02](02-user-maintenance.md)).
+   A non-approver gets `403` `{"message":"User <id> is not a system approver"}`.
 3. **Restriction** — for every action, `assertAllowed(actorId, ticket.categoryCode)`
    (see [02](02-user-maintenance.md)). E.g. user 1003 cannot act on a `DB` ticket → `403`.
 4. **Close ownership** — only the original requestor may close (`Done/Resolved → Closed`). Else `403`.

@@ -9,13 +9,24 @@ All endpoints under `/api/admin/**` require `ROLE_ADMIN` (userId 1001). Non-admi
 
 ## Data model
 ```
-users(user_id PK, password, name)
+users(user_id PK,
+      password,
+      name,
+      approver     CHAR(1)  -- 'Y' = system approver, otherwise NULL
+      email_address VARCHAR  -- nullable; recipient for notifications
+)
 user_restrictions(id PK,
                   user_id FK→users(user_id),
                   ticket_category_code FK→ticket_categories(code),
                   UNIQUE(user_id, ticket_category_code))
 ```
-Seed restriction: **1003 → DB**.
+Seed restriction: **1003 → DB**. Seed approver: **1002 (Leiva) has `approver = 'Y'`**.
+
+### Approver business rule
+A user is treated as a **system approver if and only if `approver` equals exactly `'Y'`**.
+Only system approvers may approve / reject / request-info / resolve a ticket
+(see [08-ticket-lifecycle.md](08-ticket-lifecycle.md)). The flag is exposed on login and in
+the JWT (`approver` claim). Admins can toggle it via User Maintenance.
 
 ## API — Users
 
@@ -23,8 +34,8 @@ Seed restriction: **1003 → DB**.
 |-------------------------------|----------------------------|-------|
 | `GET /api/admin/users`        | List all users             | password never returned |
 | `GET /api/admin/users/{id}`   | Get one user + restrictions| |
-| `POST /api/admin/users`       | Create user                | `{userId,name,password}`; hashed on save |
-| `PUT /api/admin/users/{id}`   | Update name/password       | password re-hashed if present |
+| `POST /api/admin/users`       | Create user                | `{userId,name,password,approver,emailAddress}`; password hashed |
+| `PUT /api/admin/users/{id}`   | Update fields              | any of name/password/approver/emailAddress; password re-hashed if present |
 | `DELETE /api/admin/users/{id}`| Delete user                | blocked if user owns tickets → `409` |
 
 ## API — Restrictions

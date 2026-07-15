@@ -86,8 +86,9 @@ class ItSupportIntegrationTest {
 
     @Test
     void fullApprovalLifecycleWithAuditAndEmail() throws Exception {
-        String requestor = bearer("1002", "Leiva");
-        String approver = bearer("1004", "Rich");
+        // Requestor Paw (1005, has email, not an approver); approver Leiva (1002, approver='Y').
+        String requestor = bearer("1005", "Paw");
+        String approver = bearer("1002", "Leiva");
         // clear outbox first
         mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
                 .delete("/api/dev/outbox"));
@@ -98,7 +99,7 @@ class ItSupportIntegrationTest {
                 .andExpect(jsonPath("$.status").value("For Approval"));
         mvc.perform(post("/api/tickets/" + id + "/approve").header("Authorization", approver))
                 .andExpect(jsonPath("$.status").value("In Process"))
-                .andExpect(jsonPath("$.approverId").value("1004"));
+                .andExpect(jsonPath("$.approverId").value("1002"));
         mvc.perform(post("/api/tickets/" + id + "/resolve").header("Authorization", approver))
                 .andExpect(jsonPath("$.status").value("Done/Resolved"));
         mvc.perform(post("/api/tickets/" + id + "/close").header("Authorization", requestor))
@@ -124,6 +125,17 @@ class ItSupportIntegrationTest {
         mvc.perform(post("/api/tickets/" + id + "/submit").header("Authorization", requestor));
         mvc.perform(post("/api/tickets/" + id + "/approve").header("Authorization", requestor))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void nonApproverCannotApprove() throws Exception {
+        String requestor = bearer("1005", "Paw");
+        String nonApprover = bearer("1004", "Rich"); // Rich has approver = NULL
+        long id = createTicket(requestor, "Non-approver attempt", "SR");
+        mvc.perform(post("/api/tickets/" + id + "/submit").header("Authorization", requestor));
+        mvc.perform(post("/api/tickets/" + id + "/approve").header("Authorization", nonApprover))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.message").value("User 1004 is not a system approver"));
     }
 
     @Test
