@@ -78,7 +78,10 @@ const TicketDetailContent = ({ id }: { id: string }) => {
         <dl className="mt-3 grid grid-cols-2 gap-2 text-sm md:grid-cols-4">
           <div><dt className="text-slate-400">Category</dt><dd>{ticket.categoryDescription}</dd></div>
           <div><dt className="text-slate-400">Requestor</dt><dd>{ticket.requestorName}</dd></div>
-          <div><dt className="text-slate-400">Approver</dt><dd>{ticket.approverName ?? '—'}</dd></div>
+          <div>
+            <dt className="text-slate-400">Approver</dt>
+            <dd data-testid="detail-approver">{ticket.approverName ?? '—'}</dd>
+          </div>
           <div>
             <dt className="text-slate-400">Status</dt>
             <dd data-testid="detail-status">{ticket.status}</dd>
