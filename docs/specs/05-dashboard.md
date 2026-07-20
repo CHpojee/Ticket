@@ -7,14 +7,14 @@ plus charts breaking tickets down by **Category** and by **Status**.
 ## Metric definitions
 | Card              | Definition |
 |-------------------|-----------|
-| Total Open        | status ∈ {New, For Approval, For Additional Info, Rejected, In Process} |
+| Total Open        | status ∈ {For Approval, For Second Approval, For Additional Info, Rejected, In Process} |
 | Pending Approvals | status = For Approval |
 | Completed         | status ∈ {Done/Resolved, Closed} |
 | Total Tickets     | all tickets (context) |
 
 ## Charts
 - **By Category** — bar chart, count per `SR/DB/MR/BW/IR` (all 5 categories always shown, 0 if none).
-- **By Status** — pie/donut, count per status across the 8 lifecycle states.
+- **By Status** — pie/donut, count per status across the 7 lifecycle states.
 
 ## API
 ### `GET /api/dashboard/summary`

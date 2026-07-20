@@ -4,8 +4,8 @@ package com.standardinsurance.itsupport.entity;
  * Ticket lifecycle states. See docs/specs/08-ticket-lifecycle.md.
  */
 public enum TicketStatus {
-    NEW("New"),
     FOR_APPROVAL("For Approval"),
+    FOR_SECOND_APPROVAL("For Second Approval"),
     REJECTED("Rejected"),
     FOR_ADDITIONAL_INFO("For Additional Info"),
     IN_PROCESS("In Process"),

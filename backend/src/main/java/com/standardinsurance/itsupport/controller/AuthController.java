@@ -33,6 +33,7 @@ public class AuthController {
     @GetMapping("/me")
     public UserDto me() {
         AuthenticatedUser user = currentUser.get();
-        return new UserDto(user.userId(), user.name(), user.role(), user.approver());
+        return new UserDto(user.userId(), user.name(), user.role(), user.approver(),
+                user.approverLevel());
     }
 }

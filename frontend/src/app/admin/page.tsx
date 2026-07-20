@@ -14,6 +14,7 @@ const AdminContent = () => {
   const [password, setPassword] = useState('');
   const [emailAddress, setEmailAddress] = useState('');
   const [approver, setApprover] = useState(false);
+  const [approverLevel, setApproverLevel] = useState(1);
   const [formError, setFormError] = useState('');
 
   const load = useCallback(() => {
@@ -29,7 +30,12 @@ const AdminContent = () => {
       await apiFetch<UserDetail>('/api/admin/users', {
         method: 'POST',
         body: {
-          userId, name, password, approver, emailAddress,
+          userId,
+          name,
+          password,
+          approver,
+          approverLevel: approver ? approverLevel : null,
+          emailAddress,
         },
       });
       setUserId('');
@@ -37,6 +43,7 @@ const AdminContent = () => {
       setPassword('');
       setEmailAddress('');
       setApprover(false);
+      setApproverLevel(1);
       load();
     } catch (err) {
       setFormError(err instanceof ApiError ? err.message : 'Failed to create user');
@@ -81,9 +88,23 @@ const AdminContent = () => {
           <input data-testid="user-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" required className="field" />
           <input data-testid="user-email" type="email" value={emailAddress} onChange={(e) => setEmailAddress(e.target.value)} placeholder="Email address (optional)" className="field md:col-span-2" />
           <label className="flex items-center gap-2 text-sm text-ink">
-            <input data-testid="user-approver" type="checkbox" checked={approver} onChange={(e) => setApprover(e.target.checked)} className="h-4 w-4 accent-rausch" />
+            <input data-testid="user-approver" type="checkbox" checked={approver} onChange={(e) => setApprover(e.target.checked)} className="h-4 w-4 accent-gold" />
             System approver
           </label>
+          {approver && (
+            <label className="flex items-center gap-2 text-sm text-ink">
+              Level
+              <select
+                data-testid="user-approver-level"
+                value={approverLevel}
+                onChange={(e) => setApproverLevel(Number(e.target.value))}
+                className="rounded-lg border border-hairline px-2 py-1"
+              >
+                <option value={1}>1 — first approval</option>
+                <option value={2}>2 — second approval</option>
+              </select>
+            </label>
+          )}
         </div>
         <div className="mt-3">
           <button type="submit" data-testid="user-create" className="btn-primary">Create User</button>
@@ -111,8 +132,8 @@ const AdminContent = () => {
                 </span>
               )}
               {u.approver && (
-                <span className="ml-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 ring-1 ring-inset ring-emerald-200">
-                  Approver
+                <span className="ml-1 rounded-full bg-gold/20 px-2.5 py-0.5 text-xs font-semibold text-gold-dark ring-1 ring-inset ring-gold/40">
+                  {u.approverLevel ? `Approver · L${u.approverLevel}` : 'Approver'}
                 </span>
               )}
             </div>

@@ -16,6 +16,7 @@ public final class AuthDtos {
     public record LoginResponse(String token, UserDto user) {
     }
 
-    public record UserDto(String userId, String name, String role, boolean approver) {
+    public record UserDto(String userId, String name, String role, boolean approver,
+                          Integer approverLevel) {
     }
 }

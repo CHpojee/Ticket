@@ -3,6 +3,7 @@ export interface AuthUser {
   name: string;
   role: 'ROLE_ADMIN' | 'ROLE_USER';
   approver: boolean;
+  approverLevel: number | null;
 }
 
 export interface LoginResponse {
@@ -62,6 +63,7 @@ export interface UserDetail {
   name: string;
   role: string;
   approver: boolean;
+  approverLevel: number | null;
   emailAddress: string | null;
   restrictions: string[];
 }
@@ -86,8 +88,8 @@ export const CATEGORIES: { code: string; description: string }[] = [
 ];
 
 export const STATUSES = [
-  'New',
   'For Approval',
+  'For Second Approval',
   'Rejected',
   'For Additional Info',
   'In Process',

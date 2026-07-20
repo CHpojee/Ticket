@@ -64,9 +64,13 @@ const TicketDetailContent = ({ id }: { id: string }) => {
 
   const isOwner = user?.userId === ticket.requestorId;
   const isApprover = user?.approver ?? false;
+  const level = user?.approverLevel ?? null;
   const { status } = ticket;
-  const canSubmit = isOwner && ['New', 'Rejected', 'For Additional Info'].includes(status);
-  const canDecide = !isOwner && isApprover && status === 'For Approval';
+  const canSubmit = isOwner && ['Rejected', 'For Additional Info'].includes(status);
+  // Level 1 acts on the first stage, level 2 on the second stage.
+  const canDecide = !isOwner && isApprover
+    && ((level === 1 && status === 'For Approval')
+      || (level === 2 && status === 'For Second Approval'));
   const canResolve = !isOwner && isApprover && status === 'In Process';
   const canClose = isOwner && status === 'Done/Resolved';
   const hasActions = canSubmit || canDecide || canResolve || canClose;

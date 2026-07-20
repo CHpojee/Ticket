@@ -7,12 +7,13 @@ internal ticketing system. Read this before making changes.
 
 ## 1. Product Summary
 
-An internal IT support ticketing system with a formal **approval cycle**. A requestor
-drafts a ticket, submits it for approval, an approver acts on it (approve / reject /
-request additional info), work is performed, and the original requestor closes it to
-confirm satisfaction. Every state transition is audited and triggers an email
-notification. Category-based restrictions prevent specific users from acting on
-specific ticket categories.
+An internal IT support ticketing system (brand: **STICK**) with a formal, **two-stage
+approval cycle**. A requestor creates a ticket, which is submitted for approval
+immediately (no draft state). A first-level approver acts on it (approve / reject / request
+additional info); on approval it goes to a second-level approver. After both approve, work
+is performed and the original requestor closes it to confirm satisfaction. Every state
+transition is audited and triggers an email notification. Category-based restrictions
+prevent specific users from acting on specific ticket categories.
 
 ---
 
@@ -104,6 +105,10 @@ npm run test:e2e -- --ui          # Playwright interactive
 - Prefer function components + hooks; no default exports for shared components
   (Airbnb `import/prefer-default-export` handled per-file); named exports for utilities.
 - No `any` unless justified with an inline comment.
+- **UI theme:** Flexy-style admin layout (fixed dark `#222` sidebar + top header, brand
+  **STICK**). Palette — black `#222`, dark gray `#626466`, gold `#e8aa34` (primary/accent),
+  white `#fff`. Gold buttons use dark text for contrast. Tokens live in `tailwind.config.ts`
+  (`gold`, `ink`, `muted`, `hairline`) with `brand`/`rausch` aliased to gold for back-compat.
 
 ### Backend
 - Google Java Format / standard Spring conventions, 4-space indentation.
@@ -124,8 +129,11 @@ Service → AuditService (records every mutation) → EmailNotificationService
 - `POST /api/auth/login` validates seeded credentials, returns a JWT.
 - Roles: `ADMIN` (userId 1001) manages users; all users can create/act on tickets subject
   to restrictions. Role is derived from user data (Admin flag) — see spec 01.
-- **Approver rule:** only users with `approver = 'Y'` may approve / reject / request-info /
-  resolve a ticket. The flag is carried in the JWT so the UI can gate approver actions.
+- **Approver rule (two-stage):** only users with `approver = 'Y'` may approve / reject /
+  request-info / resolve. Approval is sequential by `approver_level`: a **level-1** approver
+  acts on `For Approval` (→ `For Second Approval`), then a **level-2** approver acts on
+  `For Second Approval` (→ `In Process`). Both the flag and level are carried in the JWT so
+  the UI can gate the correct stage.
 - Authorization is enforced in services, not just filters, so tests exercise the rules.
 
 ### Restriction enforcement (critical constraint)
@@ -144,8 +152,9 @@ Transitions are validated centrally in `TicketStateMachine`. Illegal transitions
 
 Foreign keys are enforced. Tables:
 
-- `users(user_id PK, password, name, approver CHAR(1) 'Y'|NULL, email_address NULL)`
-  — a user is a **system approver iff `approver = 'Y'`**.
+- `users(user_id PK, password, name, approver CHAR(1) 'Y'|NULL, approver_level INT NULL,
+  email_address NULL)` — a user is a **system approver iff `approver = 'Y'`**;
+  `approver_level` is the approval stage they act at (1 = first, 2 = second).
 - `user_restrictions(id PK, user_id FK→users, ticket_category_code FK→ticket_categories,
   UNIQUE(user_id, ticket_category_code))`
 - `ticket_categories(code PK, description)`
@@ -156,16 +165,17 @@ Foreign keys are enforced. Tables:
 
 ### Seed data
 **users**
-| userId | password | name  | approver | emailAddress                      |
-|--------|----------|-------|----------|-----------------------------------|
-| 1001   | Admin    | Admin | NULL     | NULL                              |
-| 1002   | Leiva    | Leiva | Y        | rreyes@stand-insurance.com        |
-| 1003   | Rudy     | Rudy  | NULL     | richeercoronareyes@gmail.com      |
-| 1004   | Rich     | Rich  | NULL     | NULL                              |
-| 1005   | Paw      | Paw   | NULL     | clualhati@standard-insurance.com  |
+| userId | password | name  | approver | approverLevel | emailAddress                      |
+|--------|----------|-------|----------|---------------|-----------------------------------|
+| 1001   | Admin    | Admin | NULL     | NULL          | NULL                              |
+| 1002   | Leiva    | Leiva | Y        | 1             | rreyes@stand-insurance.com        |
+| 1003   | Rudy     | Rudy  | Y        | 2             | richeercoronareyes@gmail.com      |
+| 1004   | Rich     | Rich  | NULL     | NULL          | NULL                              |
+| 1005   | Paw      | Paw   | NULL     | NULL          | clualhati@standard-insurance.com  |
 
 > Seed passwords are stored **BCrypt-hashed** by the seeder; the plaintext above is the
-> login credential. `approver = 'Y'` marks a system approver (only **1002 Leiva**).
+> login credential. `approver = 'Y'` marks a system approver: **1002 Leiva (level 1)** approves
+> first, then **1003 Rudy (level 2)**. Rudy remains restricted from category **DB**.
 > Email notifications go to a user's `emailAddress`; users without one are skipped.
 
 **ticket_categories**

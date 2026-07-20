@@ -9,7 +9,7 @@ import Protected from '@/components/Protected';
 import { apiFetch } from '@/lib/api';
 import type { DashboardSummary } from '@/lib/types';
 
-const PIE_COLORS = ['#B0B0B0', '#FFB400', '#FF385C', '#FC642D', '#008489', '#00A699', '#484848'];
+const PIE_COLORS = ['#e8aa34', '#d0952a', '#626466', '#f0c675', '#8a6d1f', '#b9a06a', '#222222'];
 
 const Card = ({ label, value, testid }: { label: string; value: number; testid: string }) => (
   <div className="card p-5 transition-shadow hover:shadow-elevate">
@@ -53,8 +53,8 @@ const DashboardContent = () => {
               <CartesianGrid strokeDasharray="3 3" stroke="#EBEBEB" vertical={false} />
               <XAxis dataKey="code" tickLine={false} axisLine={{ stroke: '#DDDDDD' }} />
               <YAxis allowDecimals={false} tickLine={false} axisLine={false} />
-              <Tooltip cursor={{ fill: 'rgba(255,56,92,0.06)' }} />
-              <Bar dataKey="count" fill="#FF385C" radius={[6, 6, 0, 0]} />
+              <Tooltip cursor={{ fill: 'rgba(232,170,52,0.10)' }} />
+              <Bar dataKey="count" fill="#e8aa34" radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>

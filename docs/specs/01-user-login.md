@@ -22,11 +22,13 @@ Response `200`:
 ```json
 {
   "token": "<jwt>",
-  "user": { "userId": "1003", "name": "Rudy", "role": "ROLE_USER", "approver": false }
+  "user": { "userId": "1002", "name": "Leiva", "role": "ROLE_USER",
+            "approver": true, "approverLevel": 1 }
 }
 ```
-`approver` is `true` iff the user's `approver` column is `'Y'`. It is also a JWT claim so
-the frontend can gate approver-only actions (approve / reject / request-info / resolve).
+`approver` is `true` iff the user's `approver` column is `'Y'`; `approverLevel` (1 or 2, else
+`null`) is the approval stage they act at. Both are JWT claims so the frontend can gate the
+correct approval stage (approve / reject / request-info at the matching level).
 Errors:
 - `400` — missing `userId` or `password`.
 - `401` — unknown user or bad password (`{"message":"Invalid credentials"}`).

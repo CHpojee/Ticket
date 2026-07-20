@@ -44,7 +44,7 @@ class UserServiceTest {
     void createRejectsDuplicateUserId() {
         when(userRepository.existsByUserId("1002")).thenReturn(true);
         assertThatThrownBy(() -> service.create("1001",
-                new CreateUserRequest("1002", "Leiva", "pw", false, null)))
+                new CreateUserRequest("1002", "Leiva", "pw", false, null, null)))
                 .isInstanceOf(ConflictException.class);
         verify(userRepository, never()).save(any());
     }
@@ -54,7 +54,7 @@ class UserServiceTest {
         when(userRepository.existsByUserId("2001")).thenReturn(false);
         when(restrictionRepository.findByUser_UserId("2001")).thenReturn(List.of());
         service.create("1001",
-                new CreateUserRequest("2001", "New", "secret", true, "new@example.com"));
+                new CreateUserRequest("2001", "New", "secret", true, 1, "new@example.com"));
         verify(userRepository).save(any(User.class));
         verify(auditService).record("1001", null, "USER_CREATED", "userId", null, "2001");
     }
@@ -64,7 +64,8 @@ class UserServiceTest {
         User user = new User("1002", encoder.encode("Leiva"), "Leiva");
         when(userRepository.findById("1002")).thenReturn(Optional.of(user));
         when(restrictionRepository.findByUser_UserId("1002")).thenReturn(List.of());
-        service.update("1001", "1002", new UpdateUserRequest("Leiva Renamed", null, null, null));
+        service.update("1001", "1002",
+                new UpdateUserRequest("Leiva Renamed", null, null, null, null));
         assertThat(user.getName()).isEqualTo("Leiva Renamed");
         verify(auditService).record("1001", null, "USER_UPDATED", "name", "Leiva", "Leiva Renamed");
     }
@@ -75,9 +76,10 @@ class UserServiceTest {
         when(userRepository.findById("1004")).thenReturn(Optional.of(user));
         when(restrictionRepository.findByUser_UserId("1004")).thenReturn(List.of());
 
-        service.update("1001", "1004", new UpdateUserRequest(null, null, true, "rich@x.com"));
+        service.update("1001", "1004", new UpdateUserRequest(null, null, true, 2, "rich@x.com"));
 
         assertThat(user.isApprover()).isTrue();
+        assertThat(user.getApproverLevel()).isEqualTo(2);
         assertThat(user.getEmailAddress()).isEqualTo("rich@x.com");
         verify(auditService).record("1001", null, "USER_UPDATED", "approver", null, "Y");
         verify(auditService).record("1001", null, "USER_UPDATED", "emailAddress", null, "rich@x.com");

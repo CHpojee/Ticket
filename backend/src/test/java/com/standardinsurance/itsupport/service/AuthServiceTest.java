@@ -52,12 +52,13 @@ class AuthServiceTest {
     }
 
     @Test
-    void approverFlagIsReflected() {
+    void approverFlagAndLevelAreReflected() {
         when(userRepository.findById("1002"))
                 .thenReturn(Optional.of(new User("1002", encoder.encode("Leiva"), "Leiva",
-                        "Y", "rreyes@stand-insurance.com")));
+                        "Y", 1, "rreyes@stand-insurance.com")));
         LoginResponse res = service.login(new LoginRequest("1002", "Leiva"));
         assertThat(res.user().approver()).isTrue();
+        assertThat(res.user().approverLevel()).isEqualTo(1);
     }
 
     @Test

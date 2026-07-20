@@ -85,34 +85,43 @@ class ItSupportIntegrationTest {
     // ---- Ticket lifecycle ----
 
     @Test
-    void fullApprovalLifecycleWithAuditAndEmail() throws Exception {
-        // Requestor Paw (1005, has email, not an approver); approver Leiva (1002, approver='Y').
+    void fullTwoStageApprovalLifecycleWithAuditAndEmail() throws Exception {
+        // Requestor Paw (1005); first approver Leiva (1002, level 1); second approver Rudy (1003, level 2).
         String requestor = bearer("1005", "Paw");
-        String approver = bearer("1002", "Leiva");
+        String approver1 = bearer("1002", "Leiva");
+        String approver2 = bearer("1003", "Rudy");
         // clear outbox first
         mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
                 .delete("/api/dev/outbox"));
 
+        // Created straight into For Approval (no draft state).
         long id = createTicket(requestor, "Email lifecycle", "SR");
-
-        mvc.perform(post("/api/tickets/" + id + "/submit").header("Authorization", requestor))
+        mvc.perform(get("/api/tickets/" + id).header("Authorization", requestor))
                 .andExpect(jsonPath("$.status").value("For Approval"));
-        mvc.perform(post("/api/tickets/" + id + "/approve").header("Authorization", approver))
-                .andExpect(jsonPath("$.status").value("In Process"))
+
+        // First approval (Leiva) -> For Second Approval.
+        mvc.perform(post("/api/tickets/" + id + "/approve").header("Authorization", approver1))
+                .andExpect(jsonPath("$.status").value("For Second Approval"))
                 .andExpect(jsonPath("$.approverId").value("1002"));
-        mvc.perform(post("/api/tickets/" + id + "/resolve").header("Authorization", approver))
+        // Second approval (Rudy) -> In Process.
+        mvc.perform(post("/api/tickets/" + id + "/approve").header("Authorization", approver2))
+                .andExpect(jsonPath("$.status").value("In Process"))
+                .andExpect(jsonPath("$.approverId").value("1003"));
+        mvc.perform(post("/api/tickets/" + id + "/resolve").header("Authorization", approver2))
                 .andExpect(jsonPath("$.status").value("Done/Resolved"));
         mvc.perform(post("/api/tickets/" + id + "/close").header("Authorization", requestor))
                 .andExpect(jsonPath("$.status").value("Closed"));
 
-        // Audit: created + submitted + approved + resolved + closed = 5 status rows
+        // Audit: created + approved(L1) + approved(L2) + resolved + closed = 5 status rows
         mvc.perform(get("/api/tickets/" + id + "/audit").header("Authorization", requestor))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(5))
                 .andExpect(jsonPath("$[0].action").value("TICKET_CREATED"))
+                .andExpect(jsonPath("$[1].action").value("TICKET_APPROVED_L1"))
+                .andExpect(jsonPath("$[2].action").value("TICKET_APPROVED_L2"))
                 .andExpect(jsonPath("$[4].action").value("TICKET_CLOSED"));
 
-        // Email outbox received notifications for this lifecycle
+        // Email outbox received notifications across the lifecycle
         mvc.perform(get("/api/dev/outbox"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()", greaterThanOrEqualTo(4)));
@@ -120,9 +129,8 @@ class ItSupportIntegrationTest {
 
     @Test
     void requestorCannotApproveOwnTicket() throws Exception {
-        String requestor = bearer("1002", "Leiva");
+        String requestor = bearer("1002", "Leiva"); // Leiva is a level-1 approver but also the requestor
         long id = createTicket(requestor, "Self approve", "SR");
-        mvc.perform(post("/api/tickets/" + id + "/submit").header("Authorization", requestor));
         mvc.perform(post("/api/tickets/" + id + "/approve").header("Authorization", requestor))
                 .andExpect(status().isForbidden());
     }
@@ -132,17 +140,26 @@ class ItSupportIntegrationTest {
         String requestor = bearer("1005", "Paw");
         String nonApprover = bearer("1004", "Rich"); // Rich has approver = NULL
         long id = createTicket(requestor, "Non-approver attempt", "SR");
-        mvc.perform(post("/api/tickets/" + id + "/submit").header("Authorization", requestor));
         mvc.perform(post("/api/tickets/" + id + "/approve").header("Authorization", nonApprover))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.message").value("User 1004 is not a system approver"));
     }
 
     @Test
+    void wrongLevelApproverCannotApproveFirstStage() throws Exception {
+        String requestor = bearer("1005", "Paw");
+        String level2 = bearer("1003", "Rudy"); // level 2 cannot act on first-stage For Approval
+        long id = createTicket(requestor, "Wrong level", "SR");
+        mvc.perform(post("/api/tickets/" + id + "/approve").header("Authorization", level2))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.message").value("User 1003 is not a level-1 approver"));
+    }
+
+    @Test
     void illegalTransitionReturns409() throws Exception {
         String requestor = bearer("1002", "Leiva");
         long id = createTicket(requestor, "Bad transition", "SR");
-        // cannot close a NEW ticket
+        // cannot close a ticket that is still For Approval
         mvc.perform(post("/api/tickets/" + id + "/close").header("Authorization", requestor))
                 .andExpect(status().isConflict());
     }

@@ -17,8 +17,8 @@ import org.springframework.transaction.annotation.Transactional;
 public class DashboardService {
 
     private static final List<TicketStatus> OPEN_STATES = List.of(
-            TicketStatus.NEW, TicketStatus.FOR_APPROVAL, TicketStatus.FOR_ADDITIONAL_INFO,
-            TicketStatus.REJECTED, TicketStatus.IN_PROCESS);
+            TicketStatus.FOR_APPROVAL, TicketStatus.FOR_SECOND_APPROVAL,
+            TicketStatus.FOR_ADDITIONAL_INFO, TicketStatus.REJECTED, TicketStatus.IN_PROCESS);
     private static final List<TicketStatus> COMPLETED_STATES = List.of(
             TicketStatus.DONE_RESOLVED, TicketStatus.CLOSED);
 

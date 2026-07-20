@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
+  --background: #f6f6f7;
   --foreground: #222222;
 }
 
@@ -20,11 +20,11 @@ body {
 }
 
 @layer components {
-  /* Airbnb-style primary button */
+  /* Gold primary button with dark text for contrast */
   .btn-primary {
-    @apply inline-flex items-center justify-center rounded-lg bg-rausch px-5 py-2.5
-      font-semibold text-white transition-colors hover:bg-rausch-dark
-      focus:outline-none focus-visible:ring-2 focus-visible:ring-rausch/40
+    @apply inline-flex items-center justify-center rounded-lg bg-gold px-5 py-2.5
+      font-semibold text-ink transition-colors hover:bg-gold-dark
+      focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/50
       disabled:opacity-50;
   }
 
@@ -34,14 +34,14 @@ body {
   }
 
   .btn-ghost {
-    @apply inline-flex items-center justify-center rounded-full px-3 py-1.5 text-sm
+    @apply inline-flex items-center justify-center rounded-lg px-3 py-1.5 text-sm
       font-medium text-ink transition-colors hover:bg-neutral-100;
   }
 
   .field {
     @apply w-full rounded-lg border border-hairline bg-white px-3.5 py-2.5 text-ink
       placeholder:text-neutral-400 transition
-      focus:border-ink focus:outline-none focus:ring-1 focus:ring-ink;
+      focus:border-gold focus:outline-none focus:ring-1 focus:ring-gold;
   }
 
   .card {
@@ -57,10 +57,10 @@ body {
 .markdown ul { @apply list-disc ml-6 my-2 text-neutral-700; }
 .markdown ol { @apply list-decimal ml-6 my-2 text-neutral-700; }
 .markdown code { @apply bg-neutral-100 px-1 py-0.5 rounded text-sm; }
-.markdown pre { @apply bg-neutral-900 text-neutral-100 p-3 rounded-xl my-3 overflow-x-auto text-sm; }
+.markdown pre { @apply bg-ink text-neutral-100 p-3 rounded-xl my-3 overflow-x-auto text-sm; }
 .markdown pre code { @apply bg-transparent p-0 text-inherit; }
 .markdown table { @apply border-collapse my-3 w-full text-sm; }
 .markdown th, .markdown td { @apply border border-hairline px-2 py-1 text-left; }
 .markdown th { @apply bg-neutral-50; }
-.markdown a { @apply text-rausch underline; }
-.markdown blockquote { @apply border-l-4 border-hairline pl-3 italic text-muted my-2; }
+.markdown a { @apply text-gold-dark underline; }
+.markdown blockquote { @apply border-l-4 border-gold pl-3 italic text-muted my-2; }

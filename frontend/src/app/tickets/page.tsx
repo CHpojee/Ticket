@@ -87,7 +87,7 @@ const TicketsContent = () => {
             ))}
           </select>
           <button type="submit" data-testid="ticket-create" className="btn-primary">
-            Create Draft
+            Submit Ticket
           </button>
           {formError && (
             <span data-testid="create-error" className="text-sm text-rausch">{formError}</span>

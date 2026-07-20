@@ -7,11 +7,11 @@ complete audit trail, notifies stakeholders by email on every state change, and 
 admins dashboards, reports, and user management.
 
 ## Actors
-| Actor      | Description                                                        |
-|------------|--------------------------------------------------------------------|
-| Requestor  | Any authenticated user who creates and later closes their tickets. |
-| Approver   | A user (non-restricted for the category) who approves/rejects.     |
-| Admin      | userId **1001**; manages users and restrictions.                   |
+| Actor      | Description                                                              |
+|------------|--------------------------------------------------------------------------|
+| Requestor  | Any authenticated user who creates and later closes their tickets.       |
+| Approver   | `approver='Y'` user; **level 1** (Leiva) approves first, **level 2** (Rudy) second. |
+| Admin      | userId **1001**; manages users, approver levels, and restrictions.       |
 
 ## Core domain objects
 - **User** — login identity (`userId`, `password`, `name`).
@@ -20,12 +20,13 @@ admins dashboards, reports, and user management.
 - **Ticket** — the work item; moves through the status lifecycle.
 - **AuditLog** — immutable record of every mutation.
 
-## High-level flow
+## High-level flow (two-stage approval, no draft)
 ```
-Requestor drafts (New) ──submit──▶ For Approval
-For Approval ──approve──▶ In Process ──resolve──▶ Done/Resolved ──close(by requestor)──▶ Closed
-For Approval ──reject──▶ Rejected ──resubmit──▶ For Approval
-For Approval ──need info──▶ For Additional Info ──resubmit──▶ For Approval
+Requestor creates ──▶ For Approval
+For Approval ──approve(L1)──▶ For Second Approval ──approve(L2)──▶ In Process
+In Process ──resolve──▶ Done/Resolved ──close(by requestor)──▶ Closed
+For Approval / For Second Approval ──reject──▶ Rejected ──resubmit──▶ For Approval
+For Approval / For Second Approval ──need info──▶ For Additional Info ──resubmit──▶ For Approval
 ```
 Full rules: [08-ticket-lifecycle.md](08-ticket-lifecycle.md).
 

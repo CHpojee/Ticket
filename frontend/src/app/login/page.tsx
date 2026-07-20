@@ -35,14 +35,11 @@ const LoginPage = () => {
     <div className="flex min-h-[calc(100vh-140px)] items-center justify-center">
       <div className="w-full max-w-sm">
         <div className="mb-6 flex flex-col items-center text-center">
-          <span className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-rausch text-white">
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
-              <circle cx="12" cy="12" r="3.5" stroke="currentColor" strokeWidth="2" />
-            </svg>
+          <span className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-ink text-2xl font-black text-gold">
+            S
           </span>
-          <h1 className="text-2xl font-bold text-ink">Welcome to IT Support</h1>
-          <p className="mt-1 text-sm text-muted">Sign in with your user ID to continue</p>
+          <h1 className="text-3xl font-black tracking-widest text-ink">STICK</h1>
+          <p className="mt-1 text-sm text-muted">Internal IT Support — sign in to continue</p>
         </div>
 
         <div className="card p-6">

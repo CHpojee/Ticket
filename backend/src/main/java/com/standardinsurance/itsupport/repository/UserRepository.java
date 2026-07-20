@@ -9,4 +9,7 @@ public interface UserRepository extends JpaRepository<User, String> {
 
     /** System approvers (users whose approver flag equals the given value, e.g. "Y"). */
     List<User> findByApprover(String approver);
+
+    /** System approvers at a given approval stage (level 1 = first, 2 = second). */
+    List<User> findByApproverAndApproverLevel(String approver, Integer approverLevel);
 }

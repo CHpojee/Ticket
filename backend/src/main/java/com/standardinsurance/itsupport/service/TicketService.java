@@ -76,10 +76,17 @@ public class TicketService {
                 .orElseThrow(() -> new NotFoundException("Unknown category " + req.categoryCode()));
         restrictionService.assertAllowed(actorId, category.getCode());
 
+        // No draft state: a new ticket is submitted for approval immediately.
         Ticket ticket = new Ticket(req.title(), req.description(), category, requestor);
         ticketRepository.save(ticket);
         auditService.record(actorId, ticket.getId(), ACTION_CREATED, FIELD_STATUS,
-                null, TicketStatus.NEW.getLabel());
+                null, ticket.getStatus().getLabel());
+        // Notify first-level approvers that a ticket awaits approval.
+        events.publishEvent(new TicketTransitionEvent(
+                ticket.getId(), ticket.getTitle(), category.getCode(),
+                null, ticket.getStatus().getLabel(),
+                TicketTransition.SUBMITTED,
+                requestor.getUserId(), null, requestor.getName()));
         return ticket;
     }
 
@@ -108,37 +115,34 @@ public class TicketService {
 
     // ---- Lifecycle transitions ----
 
+    /** Resubmit a rejected / info-requested ticket back to the first approval stage. */
     @Transactional
     public Ticket submit(String actorId, Long id, String comment) {
         Ticket ticket = require(id);
         requireOwner(ticket, actorId);
         restrictionService.assertAllowed(actorId, ticket.getCategory().getCode());
-        boolean resubmit = ticket.getStatus() != TicketStatus.NEW;
         TicketStatus next = stateMachine.next(ticket.getStatus(), TicketEvent.SUBMIT);
-        return applyTransition(ticket, next,
-                resubmit ? TicketTransition.RESUBMITTED : TicketTransition.SUBMITTED,
-                actorId, comment);
+        return applyTransition(ticket, next, TicketTransition.RESUBMITTED, actorId, comment);
     }
 
     @Transactional
     public Ticket approve(String actorId, Long id, String comment) {
-        return decide(actorId, id, TicketEvent.APPROVE, TicketTransition.APPROVED, comment, true);
+        return decide(actorId, id, TicketEvent.APPROVE, comment);
     }
 
     @Transactional
     public Ticket reject(String actorId, Long id, String comment) {
-        return decide(actorId, id, TicketEvent.REJECT, TicketTransition.REJECTED, comment, true);
+        return decide(actorId, id, TicketEvent.REJECT, comment);
     }
 
     @Transactional
     public Ticket requestInfo(String actorId, Long id, String comment) {
-        return decide(actorId, id, TicketEvent.REQUEST_INFO, TicketTransition.INFO_REQUESTED,
-                comment, true);
+        return decide(actorId, id, TicketEvent.REQUEST_INFO, comment);
     }
 
     @Transactional
     public Ticket resolve(String actorId, Long id, String comment) {
-        return decide(actorId, id, TicketEvent.RESOLVE, TicketTransition.RESOLVED, comment, false);
+        return decide(actorId, id, TicketEvent.RESOLVE, comment);
     }
 
     @Transactional
@@ -150,25 +154,45 @@ public class TicketService {
         return applyTransition(ticket, next, TicketTransition.CLOSED, actorId, comment);
     }
 
-    /** Approver-side actions: actor must not be the requestor; sets approver on decision. */
-    private Ticket decide(String actorId, Long id, TicketEvent event,
-                          TicketTransition transition, String comment, boolean assignApprover) {
+    /**
+     * Approver-side actions. The actor must not be the requestor, must be a system approver,
+     * and (for the two approval stages) must hold the required approval level: level 1 acts on
+     * "For Approval", level 2 on "For Second Approval".
+     */
+    private Ticket decide(String actorId, Long id, TicketEvent event, String comment) {
         Ticket ticket = require(id);
         User actor = requireUser(actorId);
         if (actor.getUserId().equals(ticket.getRequestor().getUserId())) {
-            throw new ForbiddenActionException(
-                    "A requestor cannot " + event.name().toLowerCase() + " their own ticket");
+            throw new ForbiddenActionException("A requestor cannot "
+                    + event.name().toLowerCase().replace('_', ' ') + " their own ticket");
         }
         if (!actor.isApprover()) {
+            throw new ForbiddenActionException("User " + actorId + " is not a system approver");
+        }
+        Integer requiredLevel = stateMachine.requiredApproverLevel(ticket.getStatus());
+        if (requiredLevel != null && !requiredLevel.equals(actor.getApproverLevel())) {
             throw new ForbiddenActionException(
-                    "User " + actorId + " is not a system approver");
+                    "User " + actorId + " is not a level-" + requiredLevel + " approver");
         }
         restrictionService.assertAllowed(actorId, ticket.getCategory().getCode());
+
         TicketStatus next = stateMachine.next(ticket.getStatus(), event);
-        if (assignApprover) {
+        TicketTransition transition = transitionFor(event, ticket.getStatus());
+        if (event != TicketEvent.RESOLVE) {
             ticket.setApprover(actor);
         }
         return applyTransition(ticket, next, transition, actorId, comment);
+    }
+
+    private TicketTransition transitionFor(TicketEvent event, TicketStatus from) {
+        return switch (event) {
+            case APPROVE -> from == TicketStatus.FOR_APPROVAL
+                    ? TicketTransition.FIRST_APPROVED : TicketTransition.SECOND_APPROVED;
+            case REJECT -> TicketTransition.REJECTED;
+            case REQUEST_INFO -> TicketTransition.INFO_REQUESTED;
+            case RESOLVE -> TicketTransition.RESOLVED;
+            default -> throw new IllegalArgumentException("Not a decision event: " + event);
+        };
     }
 
     private Ticket applyTransition(Ticket ticket, TicketStatus next, TicketTransition transition,

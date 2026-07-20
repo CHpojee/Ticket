@@ -26,6 +26,10 @@ public class User {
     @Column(length = 1)
     private String approver;
 
+    /** Approval stage this approver acts at: 1 = first approval, 2 = second approval. */
+    @Column(name = "approver_level")
+    private Integer approverLevel;
+
     @Column(name = "email_address")
     private String emailAddress;
 
@@ -34,15 +38,21 @@ public class User {
     }
 
     public User(String userId, String password, String name) {
-        this(userId, password, name, null, null);
+        this(userId, password, name, null, null, null);
     }
 
     public User(String userId, String password, String name, String approver,
                 String emailAddress) {
+        this(userId, password, name, approver, null, emailAddress);
+    }
+
+    public User(String userId, String password, String name, String approver,
+                Integer approverLevel, String emailAddress) {
         this.userId = userId;
         this.password = password;
         this.name = name;
         this.approver = approver;
+        this.approverLevel = approverLevel;
         this.emailAddress = emailAddress;
     }
 
@@ -77,6 +87,14 @@ public class User {
 
     public void setApprover(String approver) {
         this.approver = approver;
+    }
+
+    public Integer getApproverLevel() {
+        return approverLevel;
+    }
+
+    public void setApproverLevel(Integer approverLevel) {
+        this.approverLevel = approverLevel;
     }
 
     public String getEmailAddress() {

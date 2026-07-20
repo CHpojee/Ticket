@@ -62,7 +62,8 @@ public class Ticket {
         this.description = description;
         this.category = category;
         this.requestor = requestor;
-        this.status = TicketStatus.NEW;
+        // Tickets are submitted for approval on creation (no draft state).
+        this.status = TicketStatus.FOR_APPROVAL;
     }
 
     @PrePersist

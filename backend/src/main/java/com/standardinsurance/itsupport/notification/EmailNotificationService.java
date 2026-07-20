@@ -55,12 +55,15 @@ public class EmailNotificationService {
     List<String> recipientsFor(TicketTransitionEvent e) {
         List<String> to = new ArrayList<>();
         switch (e.transition()) {
-            case SUBMITTED, RESUBMITTED -> userRepository.findByApprover(User.APPROVER_FLAG)
-                    .stream()
-                    .map(User::getEmailAddress)
-                    .filter(EmailNotificationService::hasText)
-                    .forEach(to::add);
-            case APPROVED, REJECTED, INFO_REQUESTED, RESOLVED ->
+            // Awaiting the first approval → notify level-1 approvers.
+            case SUBMITTED, RESUBMITTED -> to.addAll(approverEmails(1));
+            // First approval done → notify level-2 approvers (next in the chain) + requestor.
+            case FIRST_APPROVED -> {
+                to.addAll(approverEmails(2));
+                emailOf(e.requestorId()).ifPresent(to::add);
+            }
+            // Second approval done (now In Process), plus reject/info/resolve → notify requestor.
+            case SECOND_APPROVED, REJECTED, INFO_REQUESTED, RESOLVED ->
                     emailOf(e.requestorId()).ifPresent(to::add);
             case CLOSED -> {
                 emailOf(e.requestorId()).ifPresent(to::add);
@@ -69,6 +72,13 @@ public class EmailNotificationService {
             default -> { /* no recipients */ }
         }
         return to;
+    }
+
+    private List<String> approverEmails(int level) {
+        return userRepository.findByApproverAndApproverLevel(User.APPROVER_FLAG, level).stream()
+                .map(User::getEmailAddress)
+                .filter(EmailNotificationService::hasText)
+                .toList();
     }
 
     private Optional<String> emailOf(String userId) {

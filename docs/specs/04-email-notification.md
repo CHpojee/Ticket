@@ -5,18 +5,19 @@ Send an email alert to the relevant stakeholders on **every** ticket state chang
 
 ## Trigger points
 One notification per lifecycle transition:
-`SUBMITTED, APPROVED, REJECTED, INFO_REQUESTED, RESUBMITTED, RESOLVED, CLOSED`.
+`SUBMITTED (create), FIRST_APPROVED, SECOND_APPROVED, REJECTED, INFO_REQUESTED,
+RESUBMITTED, RESOLVED, CLOSED`.
 
 ## Recipients
-| Transition        | To                          | Rationale |
-|-------------------|-----------------------------|-----------|
-| Submitted         | All system approvers (`approver='Y'`) | action needed |
-| Approved          | Requestor                   | inform + work begins |
-| Rejected          | Requestor                   | may resubmit |
-| Info Requested    | Requestor                   | must supply info |
-| Resubmitted       | All system approvers        | re-review needed |
-| Resolved          | Requestor                   | please confirm/close |
-| Closed            | Requestor + Approver        | cycle complete |
+| Transition                    | To                                   | Rationale |
+|-------------------------------|--------------------------------------|-----------|
+| Created / Resubmitted         | **Level-1** approvers                | first approval needed |
+| First approval (`L1`)         | **Level-2** approvers + requestor    | second approval needed; keep requestor informed |
+| Second approval (`L2`, → In Process) | Requestor                    | approved; work begins |
+| Rejected                      | Requestor                            | may resubmit |
+| Info Requested                | Requestor                            | must supply info |
+| Resolved                      | Requestor                            | please confirm/close |
+| Closed                        | Requestor + Approver                 | cycle complete |
 
 Recipient addresses come from the user's **`email_address`** column. A user without an
 address is **skipped**; if a transition has no addressable recipient, no mail is sent (a

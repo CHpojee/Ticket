@@ -22,16 +22,16 @@ Audit rows are **append-only** — never updated or deleted via the app.
 ## Action catalog
 | action              | field    | old→new example            |
 |---------------------|----------|----------------------------|
-| `TICKET_CREATED`    | status   | `null → New`               |
+| `TICKET_CREATED`    | status   | `null → For Approval`      |
 | `TICKET_UPDATED`    | title/description | old text → new text |
-| `TICKET_SUBMITTED`  | status   | `New → For Approval`       |
-| `TICKET_APPROVED`   | status   | `For Approval → In Process`|
+| `TICKET_APPROVED_L1`| status   | `For Approval → For Second Approval` |
+| `TICKET_APPROVED_L2`| status   | `For Second Approval → In Process` |
 | `TICKET_REJECTED`   | status   | `For Approval → Rejected`  |
-| `TICKET_INFO_REQUESTED` | status | `For Approval → For Additional Info` |
+| `TICKET_INFO_REQUESTED` | status | `For Second Approval → For Additional Info` |
 | `TICKET_RESUBMITTED`| status   | `Rejected → For Approval`  |
 | `TICKET_RESOLVED`   | status   | `In Process → Done/Resolved` |
 | `TICKET_CLOSED`     | status   | `Done/Resolved → Closed`   |
-| `USER_CREATED` / `USER_UPDATED` / `USER_DELETED` | — | — |
+| `USER_CREATED` / `USER_UPDATED` / `USER_DELETED` | — | (incl. `approver`, `approverLevel`, `emailAddress` changes) |
 | `RESTRICTION_ADDED` / `RESTRICTION_REMOVED` | category | — |
 
 ## Design

@@ -57,7 +57,9 @@ public class UserService {
             throw new ConflictException("User " + req.userId() + " already exists");
         }
         User user = new User(req.userId(), passwordEncoder.encode(req.password()), req.name(),
-                req.approver() ? User.APPROVER_FLAG : null, blankToNull(req.emailAddress()));
+                req.approver() ? User.APPROVER_FLAG : null,
+                req.approver() ? req.approverLevel() : null,
+                blankToNull(req.emailAddress()));
         userRepository.save(user);
         auditService.record(actorId, null, ACTION_CREATED, "userId", null, req.userId());
         return toDetail(user);
@@ -82,6 +84,10 @@ public class UserService {
                 user.setApprover(next);
                 auditService.record(actorId, null, ACTION_UPDATED, "approver", old, next);
             }
+            // Clear the level when approver is turned off; otherwise apply the supplied level.
+            user.setApproverLevel(req.approver() ? req.approverLevel() : null);
+        } else if (req.approverLevel() != null) {
+            user.setApproverLevel(req.approverLevel());
         }
         if (req.emailAddress() != null) {
             String next = blankToNull(req.emailAddress());
@@ -119,7 +125,7 @@ public class UserService {
         List<String> restrictions = restrictionRepository.findByUser_UserId(user.getUserId())
                 .stream().map(r -> r.getCategory().getCode()).toList();
         return new UserDetail(user.getUserId(), user.getName(),
-                Roles.forUserId(user.getUserId()), user.isApprover(),
+                Roles.forUserId(user.getUserId()), user.isApprover(), user.getApproverLevel(),
                 user.getEmailAddress(), restrictions);
     }
 }

@@ -12,7 +12,8 @@ All endpoints under `/api/admin/**` require `ROLE_ADMIN` (userId 1001). Non-admi
 users(user_id PK,
       password,
       name,
-      approver     CHAR(1)  -- 'Y' = system approver, otherwise NULL
+      approver      CHAR(1)  -- 'Y' = system approver, otherwise NULL
+      approver_level INT      -- approval stage: 1 = first, 2 = second (NULL if not an approver)
       email_address VARCHAR  -- nullable; recipient for notifications
 )
 user_restrictions(id PK,
@@ -20,13 +21,17 @@ user_restrictions(id PK,
                   ticket_category_code FK→ticket_categories(code),
                   UNIQUE(user_id, ticket_category_code))
 ```
-Seed restriction: **1003 → DB**. Seed approver: **1002 (Leiva) has `approver = 'Y'`**.
+Seed restriction: **1003 → DB**. Seed approvers: **1002 (Leiva) `approver='Y'`, level 1**;
+**1003 (Rudy) `approver='Y'`, level 2**.
 
-### Approver business rule
-A user is treated as a **system approver if and only if `approver` equals exactly `'Y'`**.
-Only system approvers may approve / reject / request-info / resolve a ticket
-(see [08-ticket-lifecycle.md](08-ticket-lifecycle.md)). The flag is exposed on login and in
-the JWT (`approver` claim). Admins can toggle it via User Maintenance.
+### Approver business rule (two-stage)
+A user is a **system approver if and only if `approver` equals exactly `'Y'`**. Approval is
+**sequential** by `approver_level`: a **level-1** approver acts on the first stage
+(`For Approval`), then a **level-2** approver acts on the second stage
+(`For Second Approval`). Only system approvers may approve / reject / request-info / resolve,
+and only at the stage matching their level (see [08-ticket-lifecycle.md](08-ticket-lifecycle.md)).
+Both `approver` and `approverLevel` are exposed on login and carried in the JWT so the UI can
+gate the correct stage. Admins set them via User Maintenance.
 
 ## API — Users
 
@@ -34,8 +39,8 @@ the JWT (`approver` claim). Admins can toggle it via User Maintenance.
 |-------------------------------|----------------------------|-------|
 | `GET /api/admin/users`        | List all users             | password never returned |
 | `GET /api/admin/users/{id}`   | Get one user + restrictions| |
-| `POST /api/admin/users`       | Create user                | `{userId,name,password,approver,emailAddress}`; password hashed |
-| `PUT /api/admin/users/{id}`   | Update fields              | any of name/password/approver/emailAddress; password re-hashed if present |
+| `POST /api/admin/users`       | Create user                | `{userId,name,password,approver,approverLevel,emailAddress}`; password hashed |
+| `PUT /api/admin/users/{id}`   | Update fields              | any of name/password/approver/approverLevel/emailAddress; password re-hashed if present |
 | `DELETE /api/admin/users/{id}`| Delete user                | blocked if user owns tickets → `409` |
 
 ## API — Restrictions

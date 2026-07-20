@@ -36,8 +36,9 @@ public class AuthService {
         }
         String role = Roles.forUserId(user.getUserId());
         boolean approver = user.isApprover();
-        String token = jwtService.generate(user.getUserId(), user.getName(), role, approver);
+        Integer level = user.getApproverLevel();
+        String token = jwtService.generate(user.getUserId(), user.getName(), role, approver, level);
         return new LoginResponse(token,
-                new UserDto(user.getUserId(), user.getName(), role, approver));
+                new UserDto(user.getUserId(), user.getName(), role, approver, level));
     }
 }

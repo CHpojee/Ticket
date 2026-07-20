@@ -64,12 +64,13 @@ public class DataSeeder implements CommandLineRunner {
             return;
         }
         // Plaintext seed credentials; stored BCrypt-hashed. approver 'Y' = system approver.
+        // Two-stage approval: Leiva (level 1) approves first, then Rudy (level 2).
         userRepository.saveAll(List.of(
-                user("1001", "Admin", "Admin", null, null),
-                user("1002", "Leiva", "Leiva", "Y", "rreyes@stand-insurance.com"),
-                user("1003", "Rudy", "Rudy", null, "richeercoronareyes@gmail.com"),
-                user("1004", "Rich", "Rich", null, null),
-                user("1005", "Paw", "Paw", null, "clualhati@standard-insurance.com")));
+                user("1001", "Admin", "Admin", null, null, null),
+                user("1002", "Leiva", "Leiva", "Y", 1, "rreyes@stand-insurance.com"),
+                user("1003", "Rudy", "Rudy", "Y", 2, "richeercoronareyes@gmail.com"),
+                user("1004", "Rich", "Rich", null, null, null),
+                user("1005", "Paw", "Paw", null, null, "clualhati@standard-insurance.com")));
         log.info("Seeded {} users", userRepository.count());
     }
 
@@ -84,7 +85,8 @@ public class DataSeeder implements CommandLineRunner {
     }
 
     private User user(String userId, String password, String name, String approver,
-                      String emailAddress) {
-        return new User(userId, passwordEncoder.encode(password), name, approver, emailAddress);
+                      Integer approverLevel, String emailAddress) {
+        return new User(userId, passwordEncoder.encode(password), name, approver, approverLevel,
+                emailAddress);
     }
 }

@@ -25,9 +25,10 @@ class EmailNotificationServiceTest {
     private final MailSender capturing = sent::add;
     private EmailNotificationService service;
 
-    private final User requestor = new User("1005", "x", "Paw", null, "paw@x.com");
-    private final User noEmailRequestor = new User("1004", "x", "Rich", null, null);
-    private final User approver = new User("1002", "x", "Leiva", "Y", "leiva@x.com");
+    private final User requestor = new User("1005", "x", "Paw", null, null, "paw@x.com");
+    private final User noEmailRequestor = new User("1004", "x", "Rich", null, null, null);
+    private final User approver1 = new User("1002", "x", "Leiva", "Y", 1, "leiva@x.com");
+    private final User approver2 = new User("1003", "x", "Rudy", "Y", 2, "rudy@x.com");
 
     @BeforeEach
     void setUp() {
@@ -41,38 +42,48 @@ class EmailNotificationServiceTest {
     }
 
     @Test
-    void submissionNotifiesSystemApprovers() {
-        when(userRepository.findByApprover("Y")).thenReturn(List.of(approver));
+    void submissionNotifiesLevel1Approvers() {
+        when(userRepository.findByApproverAndApproverLevel("Y", 1))
+                .thenReturn(List.of(approver1));
         assertThat(service.recipientsFor(event(TicketTransition.SUBMITTED, "1005", null)))
                 .containsExactly("leiva@x.com");
     }
 
     @Test
-    void approvalNotifiesRequestorEmail() {
+    void firstApprovalNotifiesLevel2ApproversAndRequestor() {
+        when(userRepository.findByApproverAndApproverLevel("Y", 2))
+                .thenReturn(List.of(approver2));
         when(userRepository.findById("1005")).thenReturn(Optional.of(requestor));
-        assertThat(service.recipientsFor(event(TicketTransition.APPROVED, "1005", "1002")))
+        assertThat(service.recipientsFor(event(TicketTransition.FIRST_APPROVED, "1005", "1002")))
+                .containsExactlyInAnyOrder("rudy@x.com", "paw@x.com");
+    }
+
+    @Test
+    void secondApprovalNotifiesRequestorEmail() {
+        when(userRepository.findById("1005")).thenReturn(Optional.of(requestor));
+        assertThat(service.recipientsFor(event(TicketTransition.SECOND_APPROVED, "1005", "1003")))
                 .containsExactly("paw@x.com");
     }
 
     @Test
     void closeNotifiesRequestorAndApprover() {
         when(userRepository.findById("1005")).thenReturn(Optional.of(requestor));
-        when(userRepository.findById("1002")).thenReturn(Optional.of(approver));
-        assertThat(service.recipientsFor(event(TicketTransition.CLOSED, "1005", "1002")))
-                .containsExactlyInAnyOrder("paw@x.com", "leiva@x.com");
+        when(userRepository.findById("1003")).thenReturn(Optional.of(approver2));
+        assertThat(service.recipientsFor(event(TicketTransition.CLOSED, "1005", "1003")))
+                .containsExactlyInAnyOrder("paw@x.com", "rudy@x.com");
     }
 
     @Test
     void skipsSendWhenNoRecipientEmail() {
         when(userRepository.findById("1004")).thenReturn(Optional.of(noEmailRequestor));
-        service.send(event(TicketTransition.APPROVED, "1004", "1002"));
+        service.send(event(TicketTransition.SECOND_APPROVED, "1004", "1002"));
         assertThat(sent).isEmpty();
     }
 
     @Test
     void sendBuildsSubjectAndBody() {
         when(userRepository.findById("1005")).thenReturn(Optional.of(requestor));
-        service.send(event(TicketTransition.APPROVED, "1005", "1002"));
+        service.send(event(TicketTransition.SECOND_APPROVED, "1005", "1002"));
         assertThat(sent).hasSize(1);
         assertThat(sent.get(0).subject()).contains("Ticket #7");
         assertThat(sent.get(0).body()).contains("Printer");

@@ -1,10 +1,10 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { AuthProvider } from '@/lib/auth';
-import Nav from '@/components/Nav';
+import AppShell from '@/components/AppShell';
 
 export const metadata: Metadata = {
-  title: 'Internal IT Support',
+  title: 'STICK — Internal IT Support',
   description: 'Internal IT ticketing system with approval cycle',
 };
 
@@ -12,8 +12,7 @@ const RootLayout = ({ children }: { children: React.ReactNode }) => (
   <html lang="en">
     <body>
       <AuthProvider>
-        <Nav />
-        <main className="mx-auto max-w-6xl px-4 py-8">{children}</main>
+        <AppShell>{children}</AppShell>
       </AuthProvider>
     </body>
   </html>
